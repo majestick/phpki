@@ -44,6 +44,10 @@ x509_extensions        = vpn_client_server_ext
 default_days           = 365
 policy                 = policy_supplied
 
+[ time_stamping_cert ]
+x509_extensions        = time_stamping_ext
+default_days           = 365
+policy                 = policy_supplied
 
 [ policy_supplied ]
 countryName            = supplied
@@ -60,10 +64,10 @@ keyUsage               = cRLSign, keyCertSign
 nsCertType             = sslCA, emailCA, objCA
 subjectKeyIdentifier   = hash
 subjectAltName         = email:copy
-crlDistributionPoints  = URI:http://www.somewhere.com/phpki/index.php?stage=dl_crl
-nsComment              = "PHPki/OpenSSL Generated Root Certificate Authority"
-#nsCaRevocationUrl	= ns_revoke_query.php?
-nsCaPolicyUrl          = http://www.somewhere.com/phpki/policy.html
+crlDistributionPoints  = URI:http://ca.astec.com.pl/phpki/index.php?stage=dl_crl
+nsComment              = PHPki/OpenSSL Generated Root Certificate Authority
+#nsCaRevocationUrl     =
+nsCaPolicyUrl          = http://ca.astec.com.pl/phpki/policy.html
 
 [ email_ext ]
 basicConstraints       = CA:false
@@ -74,12 +78,12 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:http://www.somewhere.com/phpki/index.php?stage=dl_crl
-nsComment              = "PHPki/OpenSSL Generated Personal Certificate"
-nsBaseUrl              = http://www.somewhere.com/phpki/
-nsRevocationUrl	       = ns_revoke_query.php?
+crlDistributionPoints  = URI:http://ca.astec.com.pl/phpki/index.php?stage=dl_crl
+nsComment              = PHPki/OpenSSL Generated Personal Certificate
+nsBaseUrl              = http://ca.astec.com.pl/phpki/
+nsRevocationUrl        = ns_revoke_query.php?
 #nsRenewalUrl          =
-nsCaPolicyUrl          = http://www.somewhere.com/phpki/policy.html
+nsCaPolicyUrl          = http://ca.astec.com.pl/phpki/policy.html
 #nsSslServerName       =
 
 [ email_signing_ext ]
@@ -91,29 +95,42 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:http://www.somewhere.com/phpki/index.php?stage=dl_crl
-nsComment              = "PHPki/OpenSSL Generated Personal Certificate"
-nsBaseUrl              = http://www.somewhere.com/phpki/
+crlDistributionPoints  = URI:http://ca.astec.com.pl/phpki/index.php?stage=dl_crl
+nsComment              = PHPki/OpenSSL Generated Personal Certificate
+nsBaseUrl              = http://ca.astec.com.pl/phpki/
 nsRevocationUrl	       = ns_revoke_query.php?
 #nsRenewalUrl          =
-nsCaPolicyUrl          = http://www.somewhere.com/phpki/policy.html
+nsCaPolicyUrl          = http://ca.astec.com.pl/phpki/policy.html
 #nsSslServerName       =
-
 
 [ server_ext ]
 basicConstraints        = CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
 nsCertType              = critical, server
-extendedKeyUsage        = critical, serverAuth
+extendedKeyUsage        = critical, serverAuth, 1.3.6.1.5.5.7.3.1
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
-subjectAltName          = email:copy
+subjectAltName          = DNS:ASTEC Certificate Authority,email:copy
 issuerAltName           = issuer:copy
-crlDistributionPoints  = URI:http://www.somewhere.com/phpki/index.php?stage=dl_crl
-nsComment		= "PHPki/OpenSSL Generated Secure Server Certificate"
-nsBaseUrl		= http://www.somewhere.com/phpki/
-nsRevocationUrl		= ns_revoke_query.php?
-nsCaPolicyUrl           = http://www.somewhere.com/phpki/policy.html
+crlDistributionPoints   = URI:http://ca.astec.com.pl/phpki/index.php?stage=dl_crl
+nsComment               = PHPki/OpenSSL Generated Secure Server Certificate
+nsBaseUrl               = http://ca.astec.com.pl/phpki/
+nsRevocationUrl         = ns_revoke_query.php?
+nsCaPolicyUrl           = http://ca.astec.com.pl/phpki/policy.html
+
+[ time_stamping_ext ]
+basicConstraints       = CA:false
+keyUsage               = critical, nonRepudiation, digitalSignature
+extendedKeyUsage       = timeStamping
+subjectKeyIdentifier   = hash
+authorityKeyIdentifier = keyid:always, issuer:always
+subjectAltName         = DNS:ASTEC Certificate Authority,email:copy
+issuerAltName          = issuer:copy
+crlDistributionPoints  = URI:http://ca.astec.com.pl/phpki/index.php?stage=dl_crl
+nsComment              = PHPki/OpenSSL Generated Time Stamping Certificate
+nsBaseUrl              = http://ca.astec.com.pl/phpki/
+nsRevocationUrl        = ns_revoke_query.php?
+nsCaPolicyUrl          = http://ca.astec.com.pl/phpki/policy.html
 
 [ vpn_client_ext ]
 basicConstraints        = critical, CA:false
@@ -122,7 +139,7 @@ extendedKeyUsage        = critical, clientAuth
 nsCertType              = critical, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
-subjectAltName          = email:copy
+subjectAltName          = DNS:ASTEC Certificate Authority,email:copy
 
 [ vpn_server_ext ]
 basicConstraints        = critical, CA:false
@@ -131,7 +148,7 @@ extendedKeyUsage        = critical, serverAuth
 nsCertType              = critical, server
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
-subjectAltName          = email:copy
+subjectAltName          = DNS:ASTEC Certificate Authority,email:copy
 
 [ vpn_client_server_ext ]
 basicConstraints        = critical, CA:false
@@ -140,7 +157,7 @@ extendedKeyUsage        = critical, serverAuth, clientAuth
 nsCertType              = critical, server, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
-subjectAltName          = email:copy
+subjectAltName          = DNS:ASTEC Certificate Authority,email:copy
 
 [ crl_ext ]
 issuerAltName=issuer:copy

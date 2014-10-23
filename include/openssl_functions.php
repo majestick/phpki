@@ -61,7 +61,7 @@ crl_extentions	 = crl_ext
 default_days     = 365
 default_crl_days = 30
 preserve         = no
-default_md       = sha512
+default_md       = sha1
 
 [ req ]
 default_bits        = $keysize
@@ -142,10 +142,10 @@ nsComment              = $config[comment_root]
 nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_ext ]
-basicConstraints       = critical, CA:false
-keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth
-nsCertType             = critical, client, email
+basicConstraints       = CA:false
+keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage       = emailProtection
+nsCertType             = email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
