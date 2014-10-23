@@ -1,3 +1,11 @@
+Added compability with thunderbird.
+Change in phpki
+	   include/openssl_functions.php
+	   openssl.cnf
+And in phpki-store
+	   config/openssl.cnf
+
+
 About this fork
 ===============
 
