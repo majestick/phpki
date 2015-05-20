@@ -225,7 +225,7 @@ default:
 	if (! $unit)          $unit = "";
 	if (! $email)         $email = "";
 	if (! $expiry)        $expiry = 1;
-	if (! $keysize)       $keysize = 1024;
+	if (! $keysize)       $keysize = 2048;
 	if (! $cert_type)     $cert_type = 'email';
 
 	printHeader();
@@ -294,7 +294,7 @@ default:
 	<td>Key Size </td>
 	<td><select name=keysize>
 	<?
-	for ( $i = 512 ; $i < 4096 ; $i+= 512 ) {
+	for ( $i = 1024 ; $i <= 4096 ; $i+= 1024 ) {
 		print "<option value=$i " . ($keysize == $i ? "selected='selected'" : "") . " >$i bits</option>\n" ;
 	}
 
