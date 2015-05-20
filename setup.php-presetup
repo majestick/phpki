@@ -54,6 +54,14 @@ $passwdv      = gpvar('passwdv');
 $expiry       = gpvar('expiry');
 $keysize      = gpvar('keysize');
 $base_url     = gpvar('base_url');
+$crl_distrib  = gpvar('crl_distrib');
+$revoke_url   = gpvar('revoke_url');
+$policy_url   = gpvar('policy_url');
+$comment_root = gpvar('comment_root');
+$comment_email = gpvar('comment_email');
+$comment_sign = gpvar('comment_sign');
+$comment_srv  = gpvar('comment_srv');
+$comment_stamp = gpvar('comment_stamp');
 $openssl_bin  = gpvar('openssl_bin');
 $passwd_file  = gpvar('passwd_file');
 $getting_help = gpvar('getting_help');
@@ -76,6 +84,14 @@ $hidden_fields = '
     <input type=hidden name=expiry value="' . htvar($expiry) . '">
     <input type=hidden name=keysize value="' . htvar($keysize) . '">
     <input type=hidden name=base_url value="' . htvar($base_url) . '">
+    <input type=hidden name=crl_distrib value="' . htvar($crl_distrib) . '">
+    <input type=hidden name=revoke_url value="' . htvar($revoke_url) . '">
+    <input type=hidden name=policy_url value="' . htvar(policy_url) . '">
+    <input type=hidden name=comment_root value="' . htvar(comment_root) . '">
+    <input type=hidden name=comment_email value="' . htvar(comment_email) . '">
+    <input type=hidden name=comment_sign value="' . htvar(comment_sign) . '">
+    <input type=hidden name=comment_srv value="' . htvar(comment_srv) . '">
+    <input type=hidden name=comment_stamp value="' . htvar(comment_stamp) . '">
     <input type=hidden name=openssl_bin value="' . htvar($openssl_bin) . '">
     <input type=hidden name=getting_help value="' . htvar($getting_help) . '">
     <input type=hidden name=ca_prefix value="' . htvar($ca_prefix) . '">
@@ -109,13 +125,13 @@ case 'validate':
 	if ( $passwd and $passwd != $passwdv )
 		$er .= 'Password and password verification do not match.<br>';
 
-        if ( $email && ! is_email($contact) )
+        if ( $contact && ! is_email($contact) )
                 $er .= 'E-mail address ('. htvar($contact) . ') may be invalid.<br>';
 
-	if (strpos($store_dir."/",$_SERVER['DOCUMENT_ROOT']."/") === 0)
+	if (strpos($store_dir,$_SERVER['DOCUMENT_ROOT']) === 0)
 		$er .= 'Store directory must exist somewhere outside of DOCUMENT_ROOT ('.$_SERVER['DOCUMENT_ROOT'].').<br>';
 
-	if (strpos($store_dir."/",dirname($_SERVER['SCRIPT_FILENAME'])."/") === 0)
+	if (strpos($store_dir,dirname($_SERVER['SCRIPT_FILENAME'])) === 0)
 		$er .= 'Store directory cannot exist within the PHPki installation directory ('.dirname($_SERVER['SCRIPT_FILENAME']).').<br>';
 
 	if (! $er) {
@@ -140,12 +156,12 @@ case 'validate':
                 printHeader('setup');
                 ?>
 
-                <form action='<?=$PHP_SELF?>' method=post>
+                <form action='<?php echo $PHP_SELF?>' method=post>
                 <input type=submit name=Submit value='Go Back'>
-                <font color=#ff0000><?=$er?></font>
+                <font color=#ff0000><?php echo $er?></font>
                 <br><input type=submit name=Submit2 value='Go Back'>
 
-                <?
+                <?php
                 print $hidden_fields;
                 print "</form>";
 
@@ -220,6 +236,22 @@ case 'write':
 
 # Base URL
 \$config['base_url']  = '$base_url';
+
+# CRL Distribution points path
+\$config['crl_distrib']  = '$crl_distrib';
+
+# Certificate Revocation URL
+\$config['revoke_url']  = '$revoke_url';
+
+# Certificate Authority Policy URL
+\$config['policy_url']  = '$policy_url'; 
+
+# Certificate Comment Fields
+\$config['comment_root']  = '$comment_root';
+\$config['comment_email']  = '$comment_email';
+\$config['comment_sign']  = '$comment_sign';
+\$config['comment_srv']  = '$comment_srv';
+\$config['comment_stamp']  = '$comment_stamp';
 
 # Who users should contact if they have technical difficulty with
 # your certificate authority site.
@@ -361,54 +393,62 @@ emailAddress           = supplied
 [ root_ext ]
 basicConstraints       = CA:true
 keyUsage               = cRLSign, keyCertSign
+nsCertType             = sslCA, emailCA, objCA
 subjectKeyIdentifier   = hash
 subjectAltName         = email:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
-#nsCaRevocationUrl	    = ns_revoke_query.php?
-nsCaPolicyUrl          = $config[base_url]policy.html
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_root]
+#nsCaRevocationUrl     =
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage       = critical, emailProtection, clientAuth
+nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_email]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl	       = ns_revoke_query.php?
+nsRevocationUrl        = $config[revoke_url]
 #nsRenewalUrl          =
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 #nsSslServerName       =
 
 [ email_signing_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage       = critical, emailProtection, clientAuth, codeSigning
+nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_sign]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl	       = ns_revoke_query.php?
+nsRevocationUrl	       = $config[revoke_url]
 #nsRenewalUrl          =
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 #nsSslServerName       =
 
 [ server_ext ]
 basicConstraints        = CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
+nsCertType              = critical, server
 extendedKeyUsage        = critical, serverAuth, 1.3.6.1.5.5.7.3.1
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
 issuerAltName           = issuer:copy
-crlDistributionPoints   = URI:$config[base_url]index.php?stage=dl_crl
-nsBaseUrl		        = $config[base_url]
-nsRevocationUrl		    = ns_revoke_query.php?
-nsCaPolicyUrl           = $config[base_url]policy.html
+crlDistributionPoints   = URI:$config[base_url]$config[crl_distrib]
+nsComment               = $config[comment_srv]
+nsBaseUrl               = $config[base_url]
+nsRevocationUrl         = $config[revoke_url]
+nsCaPolicyUrl           = $config[base_url]$config[policy_url]
 
 [ time_stamping_ext ]
 basicConstraints       = CA:false
@@ -418,16 +458,17 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = DNS:$common_name,email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_stamp]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = ns_revoke_query.php?
-nsCaPolicyUrl          = $config[base_url]policy.html
-
+nsRevocationUrl        = $config[revoke_url]
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ vpn_client_ext ]
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature
 extendedKeyUsage        = critical, clientAuth
+nsCertType              = critical, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
@@ -436,6 +477,7 @@ subjectAltName          = DNS:$common_name,email:copy
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
 extendedKeyUsage        = critical, serverAuth
+nsCertType              = critical, server
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
@@ -444,6 +486,7 @@ subjectAltName          = DNS:$common_name,email:copy
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
 extendedKeyUsage        = critical, serverAuth, clientAuth
+nsCertType              = critical, server, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
@@ -581,25 +624,6 @@ EOS;
 	#
 	if (! unlink("$store_dir/tmp/openssl.cnf")) print "Can't unlink $store_dir/tmp/openssl.cnf";
 
-
-	#
-	# Create dhparam files for OpenVPN and others.
-	#
-	print '<p><strong>Creating 1024 bit Diffie-Hellman parameters used by OpenVPN.<br>';
-	print "Saving to $store_dir/dhparam1024.pem.</strong><br>";
-	$cmd = "openssl dhparam -rand '$config[random]' -out '$config[private_dir]/dhparam1024.pem' 1024";
-	print $cmd.'<br>';
-	flush();
-	flush_exec($cmd,100);
-
-
-	#print '<p><strong>Creating 2048 bit Diffie-Hellman parameters used by OpenVPN.<br>';
-	#print "Saving to $store_dir/dhparam2048.pem.</strong><br>";
-	#$cmd = "openssl dhparam -rand '$config[random]' -out '$config[private_dir]/dhparam2048.pem' 2048";
-	#print $cmd.'<br>';
-	#flush();
-	#flush_exec($cmd,200);
-	
 	#
 	# Step aside and let the users in (create index.php files).  
 	#
@@ -618,7 +642,7 @@ EOS;
 	<input type=submit name=submit value="Proceed To The PHPki Main Menu">
 	</form>
 	</center>
-	<?
+	<?php
 	printFooter();
 	break;
 
@@ -631,7 +655,7 @@ default:
 	if (! $expiry) $expiry = $config['expiry'];
 	if (! $expiry) $expiry = 10;
 	if (! $keysize) $keysize = $config['keysize'];
-	if (! $keysize) $keysize = 1024;
+	if (! $keysize) $keysize = 2048;
 	if (! $passwd) $passwd = $config['ca_pwd'];
 	if (! $passwdv) $passwdv = $passwd;
 
@@ -658,6 +682,16 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	if (! $base_url) $base_url = $config['base_url'];
 	if (! $base_url) $base_url = 'http://www.somewhere.com/phpki/';
 
+	if (! $crl_distrib) $crl_distrib = 'index.php?stage=dl_crl';
+	if (! $revoke_url) $revoke_url = 'ns_revoke_query.php?';
+	if (! $policy_url) $policy_url = 'policy.html';
+
+	if (! $comment_root) $comment_root = 'PHPki/OpenSSL Generated Root Certificate Authority';
+	if (! $comment_email) $comment_email = 'PHPki/OpenSSL Generated Personal Certificate';
+	if (! $comment_sign) $comment_sign = 'PHPki/OpenSSL Generated Personal Certificate';
+	if (! $comment_srv) $comment_srv = 'PHPki/OpenSSL Generated Secure Server Certificate';
+	if (! $comment_stamp) $comment_stamp = 'PHPki/OpenSSL Generated Time Stamping Certificate';
+
 	if (! $ca_prefix) $ca_prefix = $config['ca_prefix'];
 
 	if (! $openssl_bin) $openssl_bin = $config['openssl_bin'];
@@ -671,7 +705,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 
 	printHeader('setup');
 	?>
-	<form action=<?=$PHP_SELF?> method=post>
+	<form action=<?php echo $PHP_SELF?> method=post>
 	<center><h2>Certificate Authority Initial Setup</h2></center>
 	<table width=99%>
 	<tr>
@@ -680,12 +714,12 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 
 	<tr>
 	<td width=35%><strong>Organization</strong> <font color=red>*</font></td>
-	<td><input type=text name=organization value="<?=htvar($organization)?>" maxlength=60 size=50></td>
+	<td><input type=text name=organization value="<?php echo htvar($organization)?>" maxlength=60 size=50></td>
 	</tr>
 
 	<tr>
 	<td><strong>Department/Unit</strong> <font color=red>*</font></td>
-	<td><input type=text name=unit value="<?=htvar($unit)?>" maxlength=60 size=30></td>
+	<td><input type=text name=unit value="<?php echo htvar($unit)?>" maxlength=60 size=30></td>
 	</tr>
 
 	<tr>
@@ -695,7 +729,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	e-mail clients as the <cite>Issued By:</cite> text.  This is usually
 	the full name of your certificate authority (i.e. ACME Certificate Authority).
 	</td>
-	<td><input type=text name=common_name value="<?=htvar($common_name)?>" maxlength=60 size=60></td>
+	<td><input type=text name=common_name value="<?php echo htvar($common_name)?>" maxlength=60 size=60></td>
 	</tr>
 
 	<tr>
@@ -705,31 +739,31 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	regarding your certificate authority and the certificates you issue.
 	</td>
 	
-	<td><input type=text name=contact value="<?=htvar($contact)?>" maxlength=60 size=30></td>
+	<td><input type=text name=contact value="<?php echo htvar($contact)?>" maxlength=60 size=30></td>
 	</tr>
 
 	<tr>
 	<td><strong>Locality</strong> <font color=red>*</font></td>
-	<td><input type=text name=locality value="<?=htvar($locality)?>" maxlength=60 size=30></td>
+	<td><input type=text name=locality value="<?php echo htvar($locality)?>" maxlength=60 size=30></td>
 	</tr>
 
 	<tr>
 	<td><strong>State/Province</strong> <font color=red>*</font></td>
-	<td><input type=text name=province value="<?=htvar($province)?>" maxlength=60 size=20></td>
+	<td><input type=text name=province value="<?php echo htvar($province)?>" maxlength=60 size=20></td>
 	</tr>
 
 	<tr>
 	<td><strong>Country</strong> <font color=red>*</font></td>
-	<td><input type=text name=country value="<?=htvar($country)?>" maxlength=2 size=2></td>
+	<td><input type=text name=country value="<?php echo htvar($country)?>" maxlength=2 size=2></td>
 	</tr>
 
 	<tr>
 	<td>
 	<strong>Password</strong> <font color=red>*</font><br>
 	This password will be used to protect your root certificate private
-	key.  <strong><font color=red>Do not lose or forget this password.</font></strong>
+	key.<br/>Can't contain single quote ! <strong><font color=red>Do not lose or forget this password.</font></strong>
 	</td>
-	<td><input type=password name=passwd value="<?=htvar($passwd)?>" size=30>&nbsp;&nbsp; Again <input type=password name=passwdv value="<?=htvar($passwdv)?>" size=30></td>
+	<td><input type=password name=passwd value="<?php echo htvar($passwd)?>" size=30>&nbsp;&nbsp; Again <input type=password name=passwdv value="<?php echo htvar($passwdv)?>" size=30></td>
 	</tr>
 
 	<tr>
@@ -739,8 +773,8 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	</td>
 	<td><select name=expiry>
 
-	<?
-        for ( $i = 5 ; $i <= 100 ; $i+=5 ) {
+	<?php
+        for ( $i = 5 ; $i < 20 ; $i+=5 ) {
                 print "<option value=$i " . ($expiry == $i ? "selected='selected
 '" : "") . " >$i Years</option>\n" ;
         }
@@ -756,10 +790,9 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	</td>
 	<td><select name=keysize>
 
-	<?
+	<?php
         for ( $i = 512 ; $i <= 4096 ; $i+=512 ) {
-                print "<option value=$i " . ($keysize == $i ? "selected='selected
-'" : "") . " >$i bits</option>\n" ;
+                print "<option value=$i " . ($keysize == $i ? "selected='selected'" : "") . ">$i bits</option>\n" ;
         }
 	?>
 
@@ -775,7 +808,98 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	by your CA, for informational purposes.
 	</td>
 	<td>
-	<input type=text name=base_url value="<?=htvar($base_url)?>" size=50>
+	<input type=text name=base_url value="<?php echo htvar($base_url)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Certificate Authority CRL Distribution Points</strong><br>
+	 Provide the public URL where Certificate Revocation List (CRL) of
+	 your CA will reside. This path is relative to Base URL above.
+	 You may leave it by default if your clients have direct access to PHPki.
+	</td>
+	<td>
+	<input type=text name=crl_distrib value="<?php echo htvar($crl_distrib)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Certificate Authority Revocation Check URL</strong><br>
+	 Provide the public URL where clients of your CA can check if the requested
+	 certificate has been revoked. This path is relative to Base URL above.
+	 You may leave it by default if your clients have direct access to PHPki.
+	</td>
+	<td>
+	<input type=text name=revoke_url value="<?php echo htvar($revoke_url)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Certificate Authority Policy URL</strong><br>
+	 Provide the public URL where your CA policy will reside.
+	 This path is relative to Base URL above.
+	 You may leave it by default or adjust to your environment.
+	</td>
+	<td>
+	<input type=text name=policy_url value="<?php echo htvar($policy_url)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Root Certificate Comment</strong><br>
+	 Root certificate Comment attribute. You may change it to something
+	 or use the default value set by PHPki.
+	</td>
+	<td>
+	<input type=text name=comment_root value="<?php echo htvar($comment_root)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Email Certificate Comment</strong><br>
+	 Email certificate Comment attribute. You may change it to something
+	 or use the default value set by PHPki.
+	</td>
+	<td>
+	<input type=text name=comment_email value="<?php echo htvar($comment_email)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Email/Signing Certificate Comment</strong><br>
+	 Email and signing certificate Comment attribute. You may change it
+	 to something or use the default value set by PHPki.
+	</td>
+	<td>
+	<input type=text name=comment_sign value="<?php echo htvar($comment_sign)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>SSL Server Certificate Comment</strong><br>
+	 SSL server certificate Comment attribute. You may change it to something
+	 or use the default value set by PHPki.
+	</td>
+	<td>
+	<input type=text name=comment_srv value="<?php echo htvar($comment_srv)?>" size=50>
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+	<strong>Time Stamping Certificate Comment</strong><br>
+	 Time stamping certificate Comment attribute. You may change it
+	 to something or use the default value set by PHPki.
+	</td>
+	<td>
+	<input type=text name=comment_stamp value="<?php echo htvar($comment_stamp)?>" size=50>
 	</td>
 	</tr>
 
@@ -791,11 +915,11 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	<td width=35%>
 	<strong>Storage Directory <font color=red>*</font></strong><br>
 	Enter the location where PHPki will store its files.  This should be a directory where
-	the web server has full read/write access (chown <?=$uname?> ; chmod 700), and is preferably 
-	outside of DOCUMENT_ROOT (<?=$_SERVER['DOCUMENT_ROOT']?>).  You may have to manually create the directory before completing this form.
+	the web server has full read/write access (chown <?php echo $uname?> ; chmod 700), and is preferably 
+	outside of DOCUMENT_ROOT (<?php echo $_SERVER['DOCUMENT_ROOT']?>).  You may have to manually create the directory before completing this form.
 	</td>
 	<td>
-	<input type=text name=store_dir value="<?=htvar($store_dir)?>" size=35>
+	<input type=text name=store_dir value="<?php echo htvar($store_dir)?>" size=35>
 	</td>
 	</tr>
 
@@ -805,7 +929,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	Enter the location of your OpenSSL binary.  The default is usually ok.
 	</td>
 	<td>
-	<input type=text name=openssl_bin value="<?=htvar($openssl_bin)?>" size=35>
+	<input type=text name=openssl_bin value="<?php echo htvar($openssl_bin)?>" size=35>
 	</td>
 	</tr>
 
@@ -815,7 +939,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	Enter the location of your PHPki user password file.  The default is usually ok.
 	</td>
 	<td>
-	<input type=text name=passwd_file value="<?=htvar($passwd_file)?>" size=35>
+	<input type=text name=passwd_file value="<?php echo htvar($passwd_file)?>" size=35>
 	</td>
 	</tr>
 
@@ -829,7 +953,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	<cite>"acme_caroot.crt"</cite>.
 	</td>
 	<td>
-	<input type=text name=ca_prefix value="<?=htvar($ca_prefix)?>" maxlength=10 size=10>
+	<input type=text name=ca_prefix value="<?php echo htvar($ca_prefix)?>" maxlength=10 size=10>
 	</td>
 	</tr>
 
@@ -840,7 +964,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	top of every page.
 	</td>
 	<td>
-	<input type=text name=header_title value="<?=htvar($header_title)?>" maxlength=40 size=40>
+	<input type=text name=header_title value="<?php echo htvar($header_title)?>" maxlength=40 size=40>
 	</td>
 	</tr>
 
@@ -853,7 +977,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	tags to improve presentation.
 	</td>
 	<td>
-	<textarea name=getting_help cols=50 rows=15><?=htvar($getting_help)?></textarea>
+	<textarea name=getting_help cols=50 rows=15><?php echo htvar($getting_help)?></textarea>
 	</td>
 	</tr>
 	</table>
@@ -864,7 +988,7 @@ E-mail: <a href=mailto:someone@somewhere.com>someone@somewhere.com</a>&nbsp;&nbs
 	<input type=hidden name=stage value='validate'>
 	</form>
 
-	<?
+	<?php
 	printFooter();
 	break;
 }

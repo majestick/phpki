@@ -9,6 +9,40 @@ function CA_create_cnf($country='',$province='',$locality='',$organization='',$u
 	global $config, $PHPki_user;
 
 	$issuer = $PHPki_user;
+	$count_dns = 0;
+	$count_ip = 0;
+	$alt_names = "";
+	
+	if (! $dns_names == '') {
+	
+		$dns_n=explode("\n", $dns_names);
+		$count_dns  = $count_dns + 1;
+		$alt_names .= "DNS.$count_dns = $common_name\n";
+		foreach ($dns_n as $value) {
+			if (! $value == '') {
+				$count_dns  = $count_dns + 1;
+				$alt_names .= "DNS.$count_dns = ".trim($value)."\n";
+			}
+		}
+	}
+	
+	if (! $ip_addr == '') {
+		$ip_ar=explode("\n", $ip_addr);
+		foreach ($ip_ar as $value) {
+			if (! $value == '') {
+				$count_dns  = $count_dns + 1;
+				$count_ip   = $count_ip + 1;
+				$alt_names .= "DNS.$count_dns = ".trim($value)."\n";
+				$alt_names .= "IP.$count_ip = ".trim($value)."\n";
+			}
+		}
+	}
+
+	if (($count_dns > 0) || ($count_ip > 0)) {
+		$server_altnames = "@alt_names";
+	} else {
+		$server_altnames = "DNS:$common_name,email:copy";
+	}
 
 	$cnf_contents = "
 HOME             = $config[home_dir] 
@@ -99,50 +133,58 @@ authorityKeyIdentifier=keyid:always,issuer:always
 [ root_ext ]
 basicConstraints       = CA:true
 keyUsage               = cRLSign, keyCertSign
+nsCertType             = sslCA, emailCA, objCA
 subjectKeyIdentifier   = hash
 subjectAltName         = email:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
-#nsCaRevocationUrl      = ns_revoke_query.php?
-nsCaPolicyUrl          = $config[base_url]policy.html
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_root]
+#nsCaRevocationUrl     =
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage       = critical, emailProtection, clientAuth
+nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_email]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = ns_revoke_query.php?
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_signing_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage       = critical, emailProtection, clientAuth, codeSigning
+nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_sign]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = ns_revoke_query.php?
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ server_ext ]
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
+nsCertType              = server
 extendedKeyUsage        = critical, serverAuth
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
-subjectAltName          = DNS:$common_name,email:copy
+subjectAltName          = $server_altnames
 issuerAltName           = issuer:copy
-crlDistributionPoints   = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints   = URI:$config[base_url]$config[crl_distrib]
+nsComment               = $config[comment_srv]
 nsBaseUrl               = $config[base_url]
-nsRevocationUrl         = ns_revoke_query.php?
-nsCaPolicyUrl           = $config[base_url]policy.html
+nsRevocationUrl         = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl           = $config[base_url]$config[policy_url]
 
 [ time_stamping_ext ]
 basicConstraints       = CA:false
@@ -152,14 +194,16 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = DNS:$common_name,email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints   = URI:$config[base_url]index.php?stage=dl_crl
+crlDistributionPoints   = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_stamp]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = ns_revoke_query.php?
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
 
 [ vpn_client_ext ]
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature
 extendedKeyUsage        = critical, clientAuth
+nsCertType              = critical, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
@@ -168,6 +212,7 @@ subjectAltName          = DNS:$common_name,email:copy
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
 extendedKeyUsage        = critical, serverAuth
+nsCertType              = critical, server
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
@@ -176,10 +221,15 @@ subjectAltName          = DNS:$common_name,email:copy
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
 extendedKeyUsage        = critical, serverAuth, clientAuth
+nsCertType              = critical, server, client
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = DNS:$common_name,email:copy
+
+[alt_names]
+$alt_names
 ";
+
 
 	# Write out the config file.
 	$cnf_file  = tempnam('./tmp','cnf-');
@@ -461,7 +511,7 @@ function CA_revoke_cert($serial) {
 //
 // Returns an array containing the output of failed openssl commands.
 //
-function CA_create_cert($cert_type='email',$country,$province,$locality,$organization,$unit,$common_name,$email,$expiry,$passwd,$keysize=1024) {
+function CA_create_cert($cert_type='email',$country,$province,$locality,$organization,$unit,$common_name,$email,$expiry,$passwd,$keysize=2048,$dns_names,$ip_addr) {
 	global $config;
 
 	# Wait here if another user has the database locked.
@@ -479,17 +529,17 @@ function CA_create_cert($cert_type='email',$country,$province,$locality,$organiz
 
 	$expiry_days = round($expiry * 365.25, 0);
 
-	$cnf_file = CA_create_cnf($country,$province,$locality,$organization,$unit,$common_name,$email,$keysize);
+	$cnf_file = CA_create_cnf($country,$province,$locality,$organization,$unit,$common_name,$email,$keysize,$dns_names,$ip_addr,$serial);
 
 	# Escape certain dangerous characters in user input
 	$email         = escshellcmd($email);
-	$_passwd        = escshellarg($passwd);
+	$_passwd       = escshellarg($passwd);
 	$friendly_name = escshellarg($common_name);
 	$extensions    = escshellarg($cert_type.'_ext');
 	
 	# Create the certificate request
 	unset($cmd_output);
-	$cmd_output[] = 'Creating certifcate request.';
+	$cmd_output[] = 'Creating certificate request.';
 
 	if ($passwd) {
 		exec(REQ." -new -newkey rsa:$keysize -keyout '$userkey' -out '$userreq' -config '$cnf_file' -days '$expiry_days' -passout pass:$_passwd  2>&1", $cmd_output, $ret);

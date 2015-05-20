@@ -31,7 +31,7 @@ function upload($source, $destination, $content_type="application/octet-stream")
 #	header("Cache-Control: no-store, no-cache, must-revalidate");
 #	header("Cache-Control: post-check=0, pre-check=0", false);
 #	header("Pragma: no-cache");
-        header("Content-Type: $content_type");
+    header("Content-Type: $content_type");
 
 	if (is_array($source)) {
 		$fsize = 0;
@@ -64,8 +64,8 @@ function upload($source, $destination, $content_type="application/octet-stream")
 function gpvar($v) {
 	global $_GET, $_POST;
     $x = "";
-	if ($_GET[$v])  $x = $_GET[$v];
-	if ($_POST[$v]) $x = $_POST[$v];
+	if (isset($_GET[$v]))  $x = $_GET[$v];
+	if (isset($_POST[$v])) $x = $_POST[$v];
 	if (get_magic_quotes_gpc()) $x = stripslashes($x);
 	return $x;
 }
@@ -90,10 +90,9 @@ function csort($array, $column, $ascdec=SORT_ASC){
 #
 function htvar($v, $strip=false) {
 	if ($strip) 
-		return  htmlentities(stripslashes($v));
+		return  htmlentities(stripslashes($v), 0, "UTF-8");
 	else
-		return  htmlentities($v);
-	
+		return  htmlentities($v, 0, "UTF-8");
 }
 
 
@@ -183,6 +182,32 @@ function is_alnum($v) {
 #
 function is_email($v) {
 	return (eregi('^[^@ ]+\@[^@ ]+\.[A-Z]{2,4}$',$v) ? true : false);
+}
+
+#
+# Returns True if the given string is a IP address
+#
+function is_ip( $ip = null ) {
+    if( !$ip or strlen(trim($ip)) == 0){
+        return false;
+    }
+    $ip=trim($ip);
+    if(preg_match("/^[0-9]{1,3}(.[0-9]{1,3}){3}$/",$ip)) {
+        foreach(explode(".", $ip) as $block)
+            if($block<0 || $block>255 )
+                return false;
+        return true;
+    }
+    return false;
+}
+
+#
+# Returns True if the given string is a valid FQDN
+#
+function is_fqdn($FQDN) {
+    // remove leading wildcard characters if exist
+    $FQDN = preg_replace('/^\*\./','', $FQDN, 1);
+    return (!empty($FQDN) && preg_match('/^(?=.{1,254}$)((?=[a-z0-9-]{1,63}\.)(xn--+)?[a-z0-9]+(-[a-z0-9]+)*\.)+(xn--+)?[a-z0-9]{2,63}$/i', $FQDN) > 0);
 }
 
 #
