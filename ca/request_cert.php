@@ -240,7 +240,7 @@ case 'final':
                         break;
                 case 'email':
                 case 'email_signing':
-		case 'time_stamping':
+		        case 'time_stamping':
                 case 'vpn_client_server':
                 case 'vpn_client':
                 case 'vpn_server':
