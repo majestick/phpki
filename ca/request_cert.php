@@ -130,48 +130,48 @@ case 'confirm':
     	Locality<br>
     	State/Province<br>
     	Country<br>
-	Certificate Life<br>
-	Key Size<br>
-	Certificate Use<br>
-	<?php
-	if  ($cert_type == 'server' ) {
-	print 'DNS Alt Names<br>';
-	print 'IP Addresses<br>';
-	}
-	?>
+        Certificate Life<br>
+        Key Size<br>
+        Certificate Use<br>
+        <?php
+        if  ($cert_type == 'server' ) {
+        print 'DNS Alt Names<br>';
+        print 'IP Addresses<br>';
+        }
+        ?>
     	</td>
 
     	<td>
     	<?php
-	print htvar($common_name) . '<br>';
-    	print htvar($email) . '<br>';
-    	print htvar($organization) . '<br>';
-    	print htvar($unit) . '<br>';
-    	print htvar($locality) . '<br>';
-    	print htvar($province) . '<br>';
-    	print htvar($country) . '<br>';
-	print htvar($expiry). ' Year'.($expiry == 1 ? '' : 's').'<br>';
-	print htvar($keysize). ' bits<br>';
+        print htvar($common_name) . '<br>';
+        print htvar($email) . '<br>';
+        print htvar($organization) . '<br>';
+        print htvar($unit) . '<br>';
+        print htvar($locality) . '<br>';
+        print htvar($province) . '<br>';
+        print htvar($country) . '<br>';
+        print htvar($expiry). ' Year'.($expiry == 1 ? '' : 's').'<br>';
+        print htvar($keysize). ' bits<br>';
 
-	switch  ($cert_type) {
-	    case 'email': print 'E-mail, SSL Client' . '<br>';
-		break;
-	    case 'email_signing': print 'E-mail, SSL Client, Code Signing' . '<br>';
-		break;
-	    case 'server': 
-		print 'SSL Server' . '<br>';
-		print htvar($dns_names). '<br>';
-		print htvar($ip_addr). '<br>';
-		break;
-	    case 'vpn_client': print 'VPN Client Only' . '<br>';
-		break;
-	    case 'vpn_server': print 'VPN Server Only' . '<br>';
-		break;
-	    case 'vpn_client_server': print 'VPN Client, VPN Server' . '<br>';
-		break;
-	    case 'time_stamping': print 'Time Stamping' . '<br>';
-	}
-	?>
+        switch  ($cert_type) {
+            case 'email': print 'E-mail, SSL Client' . '<br>';
+            break;
+            case 'email_signing': print 'E-mail, SSL Client, Code Signing' . '<br>';
+            break;
+            case 'server': 
+            print 'SSL Server' . '<br>';
+            print htvar($dns_names). '<br>';
+            print htvar($ip_addr). '<br>';
+            break;
+            case 'vpn_client': print 'VPN Client Only' . '<br>';
+            break;
+            case 'vpn_server': print 'VPN Server Only' . '<br>';
+            break;
+            case 'vpn_client_server': print 'VPN Client, VPN Server' . '<br>';
+            break;
+            case 'time_stamping': print 'Time Stamping' . '<br>';
+        }
+        ?>
     	</td>
 
   	</tr></table>
