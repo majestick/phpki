@@ -5,7 +5,7 @@
 // File name is placed in ./tmp with a random name. It lingers unless
 // removed manually.
 //
-function CA_create_cnf($country='',$province='',$locality='',$organization='',$unit='',$common_name='',$email='',$keysize=1024) {
+function CA_create_cnf($country='',$province='',$locality='',$organization='',$unit='',$common_name='',$email='',$keysize=2048,$dns_names='',$ip_addr='',$serial='') {
 	global $config, $PHPki_user;
 
 	$issuer = $PHPki_user;
@@ -282,7 +282,7 @@ function CAdb_to_array($search = '.*') {
 function CAdb_get_entry($serial) {
 	global $config;
 	$regexp = "^[VR]\t.*\t.*\t$serial\t.*\t.*$";
-        $x = exec('egrep '.escshellarg($regexp).' '.$config['index']);
+    $x = exec('egrep '.escshellarg($regexp).' '.$config['index']);
 	if ($x)
 		return CAdb_explode_entry($x);
 	else {
@@ -390,7 +390,7 @@ function CAdb_is_revoked($serial) {
 	$regexp = "^R\t.*\t.*\t$serial\t.*\t.*$";
         $x = exec('egrep '.escshellarg($regexp).' '.$config['index']);
 
-        if  ($x) {
+    if  ($x) {
 		list($j,$j,$revoke_date,$j,$j,$j) = explode("\t", $x);
 		sscanf($revoke_date, "%2s%2s%2s",$yy,$mm,$dd);
 		return strftime("%b %d, %Y", strtotime("$mm/$dd/$yy"));
@@ -406,7 +406,7 @@ function CAdb_is_valid($serial) {
 	global $config;
 	$regexp = "^V\t.*\t.*\t$serial\t.*\t.*$";
 
-        if  (exec('egrep '.escshellarg($regexp).' '.$config['index']))
+    if  (exec('egrep '.escshellarg($regexp).' '.$config['index']))
 		return true;
 	else
 		return false;
