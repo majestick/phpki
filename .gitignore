@@ -1,5 +1,4 @@
 *.orig
 .htaccess
 config.php
-index.php
 secure.sh
