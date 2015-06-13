@@ -28,6 +28,9 @@ function flush_exec($command, $line_length=200) {
 
 $version = PHPKI_VERSION;
 
+# Set the minimum allowed password length
+$minPasswordLength = 12;
+
 # Who does the webserver run as (apache,www-data,etc)?
 $uid          = posix_getuid();
 $pwdinfo      = posix_getpwuid($uid);
@@ -86,12 +89,12 @@ $hidden_fields = '
     <input type=hidden name=base_url value="' . htvar($base_url) . '">
     <input type=hidden name=crl_distrib value="' . htvar($crl_distrib) . '">
     <input type=hidden name=revoke_url value="' . htvar($revoke_url) . '">
-    <input type=hidden name=policy_url value="' . htvar(policy_url) . '">
-    <input type=hidden name=comment_root value="' . htvar(comment_root) . '">
-    <input type=hidden name=comment_email value="' . htvar(comment_email) . '">
-    <input type=hidden name=comment_sign value="' . htvar(comment_sign) . '">
-    <input type=hidden name=comment_srv value="' . htvar(comment_srv) . '">
-    <input type=hidden name=comment_stamp value="' . htvar(comment_stamp) . '">
+    <input type=hidden name=policy_url value="' . htvar($policy_url) . '">
+    <input type=hidden name=comment_root value="' . htvar($comment_root) . '">
+    <input type=hidden name=comment_email value="' . htvar($comment_email) . '">
+    <input type=hidden name=comment_sign value="' . htvar($comment_sign) . '">
+    <input type=hidden name=comment_srv value="' . htvar($comment_srv) . '">
+    <input type=hidden name=comment_stamp value="' . htvar($comment_stamp) . '">
     <input type=hidden name=openssl_bin value="' . htvar($openssl_bin) . '">
     <input type=hidden name=getting_help value="' . htvar($getting_help) . '">
     <input type=hidden name=ca_prefix value="' . htvar($ca_prefix) . '">
@@ -119,7 +122,7 @@ case 'validate':
 	if (! $store_dir)     $er .= 'Missing Storage Directory<br>';
 
 
-	if ( $passwd && strlen($passwd) < 8 )
+	if ( $passwd && strlen($passwd) < $minPasswordLength )
 		$er .= 'Certificate password is too short.<br>';
 
 	if ( $passwd and $passwd != $passwdv )
@@ -404,7 +407,7 @@ nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 [ email_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth
+extendedKeyUsage       = emailProtection, clientAuth
 nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
@@ -421,7 +424,7 @@ nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 [ email_signing_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth, codeSigning
+extendedKeyUsage       = emailProtection, clientAuth, codeSigning
 nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
