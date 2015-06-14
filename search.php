@@ -21,7 +21,7 @@ if ($stage == "search" && ! $search) $stage = "";
 if ( !($show_valid.$show_revoked.$show_expired) ) $show_valid = 'V';
 
 switch ($stage) {
-case display:
+case 'display':
 	printHeader('about');
 
 	print '
@@ -39,7 +39,7 @@ case 'download':
 	upload("$config[cert_dir]/$serial.der", "$rec[common_name] ($rec[email]).cer", 'application/pkix-cert');
         break;
 
-case search:
+case 'search':
 	printHeader('public');
 
 	$db = CAdb_to_array("^[${show_valid}${show_revoked}${show_expired}].*$search");
@@ -49,7 +49,7 @@ case search:
 		?>
 		<center>
 		<h2>Nothing Found</h2>
-		<form action=<?php echo $PHP_SELF?> method=post name=form>
+		<form action=<?php echo htmlentities($_SERVER['SCRIPT_NAME'])?> method=post name=form>
 		<input type=hidden name=search value="<?php echo htvar($search)?>">
 		<input type=hidden name=show_valid value="<?php echo htvar($show_valid)?>">
 		<input type=hidden name=show_revoked value="<?php echo htvar($show_revoked)?>">
@@ -66,10 +66,10 @@ case search:
 	print '<th colspan=9><big>CERTIFICATE SEARCH RESULTS</big></th>';
 
         $headings = array(
-                status=>"Status", issued=>"Issued", expires=>"Expires",
-                common_name=>"User's Name", email=>"E-mail",
-                organization=>"Organization", unit=>"Department",
-                locality=>"Locality", province=>"State"
+                'status'=>"Status", 'issued'=>"Issued", 'expires'=>"Expires",
+                'common_name'=>"User's Name", 'email'=>"E-mail",
+                'organization'=>"Organization", 'unit'=>"Department",
+                'locality'=>"Locality", 'province'=>"State"
         );
 
         print '<tr>';
@@ -79,24 +79,24 @@ case search:
         print '</tr>';
 
 	foreach($db as $rec) {
-		$stcolor = array(Valid=>'green',Revoked=>'red',Expired=>'orange');
+		$stcolor = array('Valid'=>'green','Revoked'=>'red','Expired'=>'orange');
 
 		?>
 		<tr style="font-size: 11px;">
 		<td style="color: <?php echo $stcolor[$rec['status']]?>; font-weight: bold"><?php echo htvar($rec['status'])?></td>
 		<td style="white-space: nowrap"><?php echo htvar($rec['issued'])?></td>
 		<td style="white-space: nowrap"><?php echo htvar($rec['expires'])?></td>
-		<td><?php echo htvar($rec[common_name])?></td>
+		<td><?php echo htvar($rec['common_name'])?></td>
 		<td style="white-space: nowrap"><a href="mailto:<?php echo htvar($rec['common_name']).' <'.htvar($rec['email']).'>"'?>><?php echo htvar($rec['email'])?></a></td>
 		<td><?php echo htvar($rec['organization'])?></td>
 		<td><?php echo htvar($rec['unit'])?></td>
 		<td><?php echo htvar($rec['locality'])?></td>
 		<td><?php echo htvar($rec['province'])?></td>
-		<td><a href=<?php echo $PHP_SELF?>?stage=display&serial=<?php echo htvar($rec['serial'])?> target=_certdisp><img src=images/display.png alt="Display" title="Display the certificate in excruciating detail"></a>
+		<td><a href=<?php echo htmlentities($_SERVER['SCRIPT_NAME'])?>?stage=display&serial=<?php echo htvar($rec['serial'])?> target=_certdisp><img src=images/display.png alt="Display" title="Display the certificate in excruciating detail"></a>
 		<?php
 		if ($rec['status'] != 'Revoked') {
 			?>
-			<a href=<?php echo $PHP_SELF?>?stage=download&serial=<?php echo htvar($rec['serial'])?>><img src=images/download.png alt="Download" title="Download the certificate so that you may send encrypted e-mail"></a>
+			<a href=<?php echo htmlentities($_SERVER['SCRIPT_NAME'])?>?stage=download&serial=<?php echo htvar($rec['serial'])?>><img src=images/download.png alt="Download" title="Download the certificate so that you may send encrypted e-mail"></a>
 			<?php
 		}
 		print '</td></tr>';
@@ -105,7 +105,7 @@ case search:
 	?>
 	</table>
 
-	<form action=<?php echo $PHP_SELF?> method=post name=form>
+	<form action=<?php echo htmlentities($_SERVER['SCRIPT_NAME'])?> method=post name=form>
 	<input type=submit name=submit value="Another Search">
 	<input type=hidden name=search value="<?php echo htvar($search)?>">
 	<input type=hidden name=show_valid value="<?php echo htvar($show_valid)?>">
@@ -123,7 +123,7 @@ default:
 	?>
 	<body onLoad="self.focus();document.search.search.focus()">
 	<center><h2>Certificate Search</h2>
-	<form action=<?php echo $PHP_SELF?> method=post name=search>
+	<form action=<?php echo htmlentities($_SERVER['SCRIPT_NAME'])?> method=post name=search>
 	<input type=text name=search value="<?php echo htvar($search)?>" maxlength=60 size=40>
 	<input type=submit name=submit value="Find It!"><br>
 	<input type=checkbox name=show_valid value="V" <?php echo ($show_valid?'checked':'')?>>Valid
