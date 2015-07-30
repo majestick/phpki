@@ -28,6 +28,9 @@ function flush_exec($command, $line_length=200) {
 
 $version = PHPKI_VERSION;
 
+# Set the minimum allowed password length
+$minPasswordLength = 12;
+
 # Who does the webserver run as (apache,www-data,etc)?
 $uid          = posix_getuid();
 $pwdinfo      = posix_getpwuid($uid);
@@ -119,7 +122,7 @@ case 'validate':
 	if (! $store_dir)     $er .= 'Missing Storage Directory<br>';
 
 
-	if ( $passwd && strlen($passwd) < 8 )
+	if ( $passwd && strlen($passwd) < $minPasswordLength )
 		$er .= 'Certificate password is too short.<br>';
 
 	if ( $passwd and $passwd != $passwdv )
@@ -404,7 +407,7 @@ nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 [ email_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth
+extendedKeyUsage       = emailProtection, clientAuth
 nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
@@ -421,7 +424,7 @@ nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 [ email_signing_ext ]
 basicConstraints       = critical, CA:false
 keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth, codeSigning
+extendedKeyUsage       = emailProtection, clientAuth, codeSigning
 nsCertType             = critical, client, email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
