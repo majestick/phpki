@@ -630,11 +630,11 @@ EOS;
 	#
 	# Step aside and let the users in (create index.php files).  
 	#
-	if (! unlink('index.php')) print "Can't unlink index.php";
-	if (! unlink('setup.php')) print "Can't unlink setup.php";;
-	if (! unlink('ca/index.php')) print "Can't unlink ca/index.php";
-	if (! symlink('main.php','index.php')) print "Can't symlink main.php";
-	if (! symlink('main.php','ca/index.php')) print "Can't symlink ca/main.php";;
+	#if (! unlink('index.php')) print "Can't unlink index.php";
+	#if (! unlink('setup.php')) print "Can't unlink setup.php";;
+	#if (! unlink('ca/index.php')) print "Can't unlink ca/index.php";
+	#if (! symlink('main.php','index.php')) print "Can't symlink main.php";
+	#if (! symlink('main.php','ca/index.php')) print "Can't symlink ca/main.php";;
 
 	?>
 	<center>
