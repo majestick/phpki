@@ -1,3 +1,3 @@
 <?php
-header("Location: setup.php-presetup",TRUE,302);
+header("Location: setup_main.php",TRUE,302);
 ?>

@@ -299,13 +299,8 @@ function CAdb_get_entry($serial) {
 function CAdb_in($email="", $name="") {
 	global $config;
 	$regexp = "^[V].*CN=$name/(Email|emailAddress)=$email";
-<<<<<<< HEAD
-        $x =exec('egrep '.escshellarg($regexp).' '.$config[index]);
-=======
     $x =exec('egrep '.escshellarg($regexp).' '.$config['index']);
->>>>>>> bf6a012d24f5b533d35fb09fb6e855809cb4d816
-
-        if ($x) {
+    if ($x) {
 		list($j,$j,$j,$serial,$j,$j) = explode("\t", $x);
 		return "$serial";
 	}
