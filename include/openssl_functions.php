@@ -5,7 +5,7 @@
 // File name is placed in ./tmp with a random name. It lingers unless
 // removed manually.
 //
-function CA_create_cnf($country='',$province='',$locality='',$organization='',$unit='',$common_name='',$email='',$keysize=4096,$dns_names='',$ip_addr='',$serial='') {
+function CA_create_cnf($country='',$province='',$locality='',$organization='',$unit='',$common_name='',$email='',$keysize=2048,$dns_names='',$ip_addr='',$serial='') {
 	global $config, $PHPki_user;
 
 	$issuer = $PHPki_user;
@@ -136,25 +136,25 @@ keyUsage               = cRLSign, keyCertSign
 nsCertType             = sslCA, emailCA, objCA
 subjectKeyIdentifier   = hash
 subjectAltName         = email:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
-nsComment              = \"PHPki/OpenSSL Generated Root Certificate\"
-#nsCaRevocationUrl     = $config[base_url]ns_revoke_query.php?$serial
-nsCaPolicyUrl          = $config[base_url]policy.html
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_root]
+#nsCaRevocationUrl     =
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_ext ]
-basicConstraints       = critical, CA:false
-keyUsage               = critical, nonRepudiation, digitalSignature, keyEncipherment
-extendedKeyUsage       = critical, emailProtection, clientAuth
-nsCertType             = critical, client, email
+basicConstraints       = CA:false
+keyUsage               = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage       = emailProtection
+nsCertType             = email
 subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
-nsComment              = \"PHPki/OpenSSL Generated Personal Certificate\"
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_email]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = $config[base_url]ns_revoke_query.php?$serial
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ email_signing_ext ]
 basicConstraints       = critical, CA:false
@@ -165,26 +165,26 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints  = URI:$config[base_url]index.php?stage=dl_crl
-nsComment              = \"PHPki/OpenSSL Generated Personal Certificate\"
+crlDistributionPoints  = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_sign]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = $config[base_url]ns_revoke_query.php?$serial
-nsCaPolicyUrl          = $config[base_url]policy.html
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl          = $config[base_url]$config[policy_url]
 
 [ server_ext ]
 basicConstraints        = critical, CA:false
 keyUsage                = critical, digitalSignature, keyEncipherment
-nsCertType              = critical, server
+nsCertType              = server
 extendedKeyUsage        = critical, serverAuth
 subjectKeyIdentifier    = hash
 authorityKeyIdentifier  = keyid:always, issuer:always
 subjectAltName          = $server_altnames
 issuerAltName           = issuer:copy
-crlDistributionPoints   = URI:$config[base_url]index.php?stage=dl_crl
-nsComment               = \"PHPki/OpenSSL Generated Server Certificate\"
+crlDistributionPoints   = URI:$config[base_url]$config[crl_distrib]
+nsComment               = $config[comment_srv]
 nsBaseUrl               = $config[base_url]
-nsRevocationUrl         = $config[base_url]ns_revoke_query.php?$serial
-nsCaPolicyUrl           = $config[base_url]policy.html
+nsRevocationUrl         = $config[base_url]$config[revoke_url]$serial
+nsCaPolicyUrl           = $config[base_url]$config[policy_url]
 
 [ time_stamping_ext ]
 basicConstraints       = CA:false
@@ -194,10 +194,10 @@ subjectKeyIdentifier   = hash
 authorityKeyIdentifier = keyid:always, issuer:always
 subjectAltName         = DNS:$common_name,email:copy
 issuerAltName          = issuer:copy
-crlDistributionPoints   = URI:$config[base_url]index.php?stage=dl_crl
-nsComment              = \"PHPki/OpenSSL Generated Time Stamping Certificate\"
+crlDistributionPoints   = URI:$config[base_url]$config[crl_distrib]
+nsComment              = $config[comment_stamp]
 nsBaseUrl              = $config[base_url]
-nsRevocationUrl        = $config[base_url]ns_revoke_query.php?$serial
+nsRevocationUrl        = $config[base_url]$config[revoke_url]$serial
 
 [ vpn_client_ext ]
 basicConstraints        = critical, CA:false
@@ -250,21 +250,22 @@ function CAdb_to_array($search = '.*') {
 	global $config;
 
 	# Prepend a default status to search string if missing.
-	if (! ereg('^\^\[.*\]', $search)) $search = '^[VRE].*'.$search;
+	if (! preg_match("/^\^\[.*\]/", $search)) $search = '^[VRE].*'.$search;
 
 	# Include valid certs?
-	if (ereg('^\^\[.*V.*\]',$search)) $inclval = true;
+	if (preg_match("/^\^\[.*V.*\]/",$search)) $inclval = true;
 	# Include revoked certs?
-	if (ereg('^\^\[.*R.*\]',$search)) $inclrev = true;
+	if (preg_match("/^\^\[.*R.*\]/",$search)) $inclrev = true;
 	# Include expired certs?
-	if (ereg('^\^\[.*E.*\]',$search)) $inclexp = true;
+	if (preg_match("/^\^\[.*E.*\]/",$search)) $inclexp = true;
 
 	# There isn't really a status of 'E' in the openssl index.
 	# Change (E)xpired to (V)alid within the search string.
-	$search = ereg_replace('^(\^\[.*)E(.*\])','\\1V\\2',$search);
+	$search = preg_replace("/^(\^\[.*)E(.*\])/",'$1V$2',$search);
 
 	$db = array();
 	exec('egrep -i '.escshellarg($search).' '.$config['index'], $x);
+	
 	foreach($x as $y) {
 		$i = CAdb_explode_entry($y);
 		if (($i['status'] == "Valid" && $inclval) || ($i['status'] == "Revoked" && $inclrev) || ($i['status'] == "Expired" && $inclexp))
@@ -298,9 +299,8 @@ function CAdb_get_entry($serial) {
 function CAdb_in($email="", $name="") {
 	global $config;
 	$regexp = "^[V].*CN=$name/(Email|emailAddress)=$email";
-        $x =exec('egrep '.escshellarg($regexp).' '.$config[index]);
-
-        if ($x) {
+    $x =exec('egrep '.escshellarg($regexp).' '.$config['index']);
+    if ($x) {
 		list($j,$j,$j,$serial,$j,$j) = explode("\t", $x);
 		return "$serial";
 	}
@@ -355,8 +355,16 @@ function CAdb_explode_entry($dbentry) {
 	sscanf(CA_cert_startdate($a[3]),"%s %s %s %s", $mm,$dd,$tt,$yy);
 	$db['issued'] = strftime("%y-%b-%d", strtotime("$dd $mm $yy"));
 
-	sscanf($a[1], "%2s%2s%2s",$yy,$mm,$dd);
-	$db['expires'] = strftime("%y-%b-%d", strtotime("$mm/$dd/$yy"));
+
+	if (strlen($a[1]) <= 13) {
+	   // date in database 'index.txt' stored in UTC format (2 digit year)
+	   sscanf($a[1], "%2s%2s%2s",$yy,$mm,$dd);
+	}
+	else {
+	   // date in database 'index.txt' stored in generalized format (4 digit year)
+	   sscanf($a[1], "%4s%2s%2s",$yy,$mm,$dd);
+	}
+	$db['expires'] = strftime("%Y-%b-%d", strtotime("$mm/$dd/$yy"));
 
 	if (time() > strtotime("$mm/$dd/$yy"))
 		$db['status'] = "Expired";
@@ -440,7 +448,7 @@ function CA_cert_subject($serial) {
 //
 function CA_cert_cname($serial) {
 	global $config;
-	return(ereg_replace('^.*/CN=(.*)/.*','\\1',CA_cert_subject($serial)));
+	return(preg_replace('#^.*/CN=(.*)/.*#','\\1',CA_cert_subject($serial)));
 }
 
 //
@@ -504,7 +512,7 @@ function CA_revoke_cert($serial) {
 //
 // Returns an array containing the output of failed openssl commands.
 //
-function CA_create_cert($cert_type='email',$country,$province,$locality,$organization,$unit,$common_name,$email,$expiry,$passwd,$keysize=1024,$dns_names,$ip_addr) {
+function CA_create_cert($cert_type='email',$country,$province,$locality,$organization,$unit,$common_name,$email,$expiry,$passwd,$keysize=2048,$dns_names,$ip_addr) {
 	global $config;
 
 	# Wait here if another user has the database locked.
@@ -532,13 +540,13 @@ function CA_create_cert($cert_type='email',$country,$province,$locality,$organiz
 	
 	# Create the certificate request
 	unset($cmd_output);
-	$cmd_output[] = 'Creating certifcate request.';
+	$cmd_output[] = 'Creating certificate request.';
 
 	if ($passwd) {
-		exec(REQ." -new -newkey rsa:$keysize -keyout '$userkey' -out '$userreq' -config '$cnf_file' -days '$expiry_days' -passout pass:$_passwd  2>&1", $cmd_output, $ret);
+		exec(REQ." -SHA256 -new -newkey rsa:$keysize -keyout '$userkey' -out '$userreq' -config '$cnf_file' -days '$expiry_days' -passout pass:$_passwd  2>&1", $cmd_output, $ret);
 	}
 	else {
-		exec(REQ." -new -nodes -newkey rsa:$keysize -keyout '$userkey' -out '$userreq' -config '$cnf_file' -days '$expiry_days' 2>&1", $cmd_output, $ret);
+		exec(REQ." -SHA256 -new -nodes -newkey rsa:$keysize -keyout '$userkey' -out '$userreq' -config '$cnf_file' -days '$expiry_days' 2>&1", $cmd_output, $ret);
 	}
 	
 	# Sign the certificate request and create the certificate
@@ -786,25 +794,25 @@ function CA_cert_type($serial) {
 
 	$certtext = CA_cert_text($serial);
 
-	if (ereg('OpenSSL.* (E.?mail|Personal) .*Certificate', $certtext) && ereg('Code Signing', $certtest)) {
+	if (preg_match('OpenSSL.* (E.?mail|Personal) .*Certificate', $certtext) && preg_match('Code Signing', $certtest)) {
 		$cert_type = 'email_signing';
 	}
-	if (ereg('OpenSSL.* (E.?mail|Personal) .*Certificate', $certtext)) {
+	if (preg_match('OpenSSL.* (E.?mail|Personal) .*Certificate', $certtext)) {
 		$cert_type = 'email';
 	}
-	elseif (ereg('OpenSSL.* Server .*Certificate', $certtext)) {
+	elseif (preg_match('OpenSSL.* Server .*Certificate', $certtext)) {
 		$cert_type = 'server';
 	}
-	elseif (ereg('timeStamping|Time Stamping', $certtext)) {
+	elseif (preg_match('timeStamping|Time Stamping', $certtext)) {
 		$cert_type = 'time_stamping';
 	}
-	elseif (ereg('TLS Web Client Authentication', $certtext) && ereg('TLS Web Server Authentication', $certtext)) {
+	elseif (preg_match('TLS Web Client Authentication', $certtext) && preg_match('TLS Web Server Authentication', $certtext)) {
 		$cert_type = 'vpn_client_server';
 	}
-	elseif (ereg('TLS Web Client Authentication', $certtext)) {
+	elseif (preg_match('TLS Web Client Authentication', $certtext)) {
 		$cert_type = 'vpn_client';
 	}
-	elseif (ereg('TLS Web Server Authentication', $certtext)) {
+	elseif (preg_match('TLS Web Server Authentication', $certtext)) {
 		$cert_type = 'vpn_server';
 	}
 	else {

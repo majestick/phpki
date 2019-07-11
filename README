@@ -1,42 +1,3 @@
-About this fork of fork :)
-
-Added compability with thunderbird.
-Copy from this repo
-	   include/openssl_functions.php
-	   openssl.cnf
-	   And in phpki-store
-	   config/openssl.cnf
-
-----------------------------------------
-----------------------------------------
-
-Original readme
-
-
-About this fork
-===============
-
-Reasons for forking
--------------------
-
-After spending a fair amount of time looking for a basic, relatively full featured internal PKI solution, I came across PHPki on Sourceforge.  However, being that I don't enjoy using Sourceforge and that there are a number of improvements I wish to make to this solution, I have forked it into a Github repository.  Hopefully others may find this useful.
-
-Main changes
-------------
-
-* Changed hash algorithm from MD5 to SHA
-
-
-Planned changes
----------------
-
-* Remove usage of symlinks.
-* Strip out built-in password support -- this can be implemented by the webserver (htaccess) or a bolt-on like SimpleSAMLphp
-* Fix CRL subsystem (I found this to not be operational, have not yet investigated)
-
-
-Original README (0.83)
-======================
 NOTICE:
 This application is designed to be an easy to use "certificate factory"
 requiring minimum human intervention to administer.  It is intended for
@@ -75,7 +36,6 @@ Unpack the PHPki tarball onto your web server. For example:
 	cp phpki.tar.gz /var/tmp
 	cd /var/www/html
 	tar -xzvf /var/tmp/phpki.tar.gz
-	chown <apache-user> -R phpki/
 
 To configure the certificate authority and create your root certificate,
 point your browser to where you unpacked PHPki. For example:
